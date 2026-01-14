@@ -1,0 +1,54 @@
+.group {
+    display: flex;
+    flex-wrap: wrap;   /* 关键：允许换行 */
+    gap: 4px;          /* 比 margin 好用一万倍 */
+}
+
+.group span.tag {
+    color: #333;
+    width: 60px;
+    border: 1px solid #eee;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 4px;
+
+    position: relative;
+}
+
+.group span.tag:hover {
+    color: #0073e4;
+    border-color:#0073e4;
+}
+
+.group span.tag-select {
+    color: #0073e4;
+    border-color: #0073e4;
+}
+
+.group span.tag-add {
+    color: #aaa;
+    border: 1px dashed #aaa;
+}
+
+.tag-remove {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  text-align: center;
+
+  font-style: normal;
+  font-size: 12px;
+  cursor: pointer;
+
+  background: #fff;
+  border-radius: 50%;
+  color: #999;
+}
+
+.tag-remove:hover {
+  color: #fff;
+  background: red;
+}

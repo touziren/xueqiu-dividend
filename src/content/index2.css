@@ -1,0 +1,187 @@
+/* 浮动面板整体 */
+#xueqiu-panel {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  /* width: 260px; */
+
+  max-height: 90%;
+  overflow-y: scroll;
+
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #333;
+  z-index: 99999;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 悬浮一点点反馈 */
+#xueqiu-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+}
+
+/* 标题 */
+#xueqiu-panel > div:first-child {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #222;
+}
+
+/* 内容 */
+#xueqiu-panel > div:nth-child(2) {
+  line-height: 1.6;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+/* 关闭按钮 */
+#xueqiu-panel button {
+  display: inline-block;
+  padding: 6px 10px;
+  font-size: 12px;
+
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+
+  background: #f2f3f5;
+  color: #444;
+}
+
+/* 按钮 hover */
+#xueqiu-panel button:hover {
+  background: #e6e8eb;
+}
+
+/* 表格基础样式 */
+.table-clean {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 20px 0;
+}
+
+.table-clean th,
+.table-clean td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.table-clean th {
+  background: #f7f7f7;
+  font-weight: 600;
+  cursor: pointer; /* 添加鼠标悬停效果 */
+  position: relative; /* 用于绝对定位箭头 */
+  padding-right: 20px; /* 为箭头留出空间 */
+}
+
+.table-clean th:hover {
+  background: #f2f2f2; /* 鼠标悬停时的背景颜色 */
+}
+
+.table-clean th::after {
+  content: '';
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  transition: transform 0.3s; /* 添加动画效果 */
+}
+
+/* 排序状态样式 */
+.table-clean th.sorted-asc::after {
+  content: ' \2191'; /* 向上箭头 */
+  color: green;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.table-clean th.sorted-desc::after {
+  content: ' \2193'; /* 向下箭头 */
+  color: red;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* 表格行的悬停效果 */
+.table-clean tbody tr:hover {
+  background: #fafafa;
+}
+
+/* 表格行的交替背景颜色 */
+.table-clean tbody tr:nth-child(even) {
+  background: #fcfcfc;
+}
+
+/* 表格在小屏幕上的响应式设计 */
+@media (max-width: 768px) {
+  .table-clean {
+    font-size: 12px;
+  }
+  .table-clean th,
+  .table-clean td {
+    padding: 8px 10px;
+  }
+}
+
+/* 表格边框和分割线 */
+.table-clean th,
+.table-clean td {
+  border-right: 1px solid #eee;
+}
+
+.table-clean th:last-child,
+.table-clean td:last-child {
+  border-right: none;
+}
+
+/*股票上涨幅度*/
+span.stock_inc{
+  margin-left: 10px;
+}
+span.stock_inc_up{
+  color: red;
+}
+span.stock_inc_down{
+  color: green;
+}
+span.ctl_del {
+    color: #ff0000;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+/**添加按钮**/
+button#updateCodeButton {
+  background-color: #4CAF50; /* 绿色背景 */
+  border: none; /* 无边框 */
+  color: white; /* 白色文字 */
+  padding: 5px 20px; /* 内边距 */
+  text-align: center; /* 文字居中 */
+  text-decoration: none; /* 无下划线 */
+  display: inline-block; /* 行内块元素 */
+  font-size: 16px; /* 字体大小 */
+  margin: 4px 2px; /* 外边距 */
+  cursor: pointer; /* 鼠标悬停时显示手型 */
+  border-radius: 6px; /* 圆角边框 */
+  transition: background-color 0.3s ease; /* 平滑过渡效果 */
+}
+button#updateCodeButton:hover {
+  background-color: #45a049; /* 鼠标悬停时的背景颜色 */
+}

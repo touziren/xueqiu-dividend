@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "雪球股息2",
+  "version": "1.0",
+  "description": "雪球股息查看软件",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://xueqiu.com/"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["index.html", "index.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
