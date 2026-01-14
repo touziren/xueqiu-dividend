@@ -21,6 +21,7 @@ class StockTable extends React.Component {
   del_row(code) {
     const group = this.props.group;
     var stocks = local.map_a_get(stock_data_key, group, {});
+    code = code.toUpperCase();
     if (code in stocks) {
       delete stocks[code];
       local.map_a_set(stock_data_key, group, stocks);
@@ -43,18 +44,18 @@ class StockTable extends React.Component {
     // 名称
     const name = record.quote.name;
     const currency = record.quote.currency;
-    const dividend = record.quote.dividend;
+    const dividend = record.quote.dividend? record.quote.dividend: 0;
     // 当前价
-    const current = record.quote.current;
-    const last_close = record.quote.last_close;
+    const current = record.quote.current? record.quote.current: 0.01;
+    const last_close = record.quote.last_close? record.quote.last_close: 0.01;
     /* 市净率&市盈率 */
-    const pb = record.quote.pb.toFixed(3);
+    const pb = record.quote.pb? record.quote.pb.toFixed(3): 0;
     // 市盈率（静）
-    const pe_lyr = record.quote.pe_lyr;
+    const pe_lyr = record.quote.pe_lyr? record.quote.pe_lyr: 0;
     // 市盈率（动）
-    const pe_forecast = record.quote.pe_forecast;
+    const pe_forecast = record.quote.pe_forecast? record.quote.pe_forecast: 0;
     // 市盈率（ttm）
-    const pe_ttm = record.quote.pe_ttm;
+    const pe_ttm = record.quote.pe_ttm? record.quote.pe_ttm: 0;
     // 股息率
     const dividend_rate = ((dividend / current) * 100 * (currency == 'HKD'? 0.8: 1)).toFixed(2);
     // 当日涨跌幅

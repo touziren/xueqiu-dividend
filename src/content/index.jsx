@@ -54,11 +54,15 @@ class App extends React.Component {
       var code = prompt('请输入股票代码(如000001, 0688）')
       if(code == null) {return}
       
-      code = code.trim()
+      code = code.trim().toUpperCase();
 
       if(code.length > 0){
         const rep = xueqiu.get_quote_data(code);
         const data= rep.data.items[0];
+        if(data.quote == null) {
+          alert(code+'标的不存在！');
+          return;
+        }
         // 加入local
         const group = this.state.group;
         var stocks = local.map_a_get(stock_data_key, group, {});
@@ -83,7 +87,10 @@ class App extends React.Component {
         const group = this.state.group;
         var stocks = local.map_a_get(stock_data_key, group, {});
         for(var item of items) {
-          const code = item.quote.code;
+          if(item.quote == null) {
+            continue;
+          }
+          const code = item.quote.code.toUpperCase();
           stocks[code] = item;
         }
         local.map_a_set(stock_data_key, group, stocks);
