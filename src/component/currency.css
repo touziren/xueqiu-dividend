@@ -1,0 +1,23 @@
+/* 汇率 */
+div.currency {
+    display: flex;
+    gap: 10px;
+
+    span {
+        user-select: text;
+    }
+
+    span.time {
+        color: rgb(0 115 228);
+    }
+
+    span.update-btn {
+        display: inline-flex;
+        align-items: center;
+
+        img {
+            height: 1rem;
+            cursor: pointer;
+        }
+    }
+}

@@ -3,9 +3,11 @@ import { createRoot } from 'react-dom/client'
 
 import GroupButton from '../component/group_button'
 import StockTable from '../component/stock_table'
+import Currency from '../component/currency.jsx'
 import * as local from '../utils/local_db'
 import * as xueqiu from '../utils/xueqiu'
 import {group_key, stock_data_key} from '../utils/local_db_key.js'
+
 import './index.css'
 
 /* 分组按钮的事件管理 */
@@ -106,6 +108,8 @@ class App extends React.Component {
       <div>
         {open && (
           <div className="panel">
+            <Currency title='HKD/CNY' code='HKDCNY.FX' />
+            <div className="divider"></div>
             <GroupButton
               data={groups}
               select={this.state.group}
@@ -141,3 +145,12 @@ root.id = 'xueqiu-panel'
 document.body.appendChild(root)
 
 createRoot(root).render(<App />)
+// console.log('雪球网页加载完成')
+// chrome.runtime.sendMessage(
+//   {
+//     type: 'hello'
+//   },
+//   (response) => {
+//     console.log('Background 返回：', response)
+//   }
+// )

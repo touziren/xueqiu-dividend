@@ -40,7 +40,7 @@ class StockTable extends React.Component {
   recordTd(record) {
     // 代码
     const code = record.quote.code;
-    let url_code = xueqiu.url_code(code);
+    let url_code = xueqiu.code_to_symbol(code);
     // 名称
     const name = record.quote.name;
     const currency = record.quote.currency;
@@ -80,12 +80,12 @@ class StockTable extends React.Component {
             {inc >= 0 ? '+' + inc : inc} ({inc >= 0 ? '+' + inc_rate : inc_rate}%)
           </span>
         </td>
+        <td>{dividend}</td>
         <td>{dividend_rate + '%'}</td>
         <td>{pb}</td>
         <td>{pe_lyr}</td>
         <td>{pe_forecast}</td>
         <td>{pe_ttm}</td>
-        <td>{dividend}</td>
         <td>
           <span className="ctl_del" onClick={() => { this.del_row(code) }}>删除</span>
         </td>
@@ -185,6 +185,10 @@ class StockTable extends React.Component {
               <span className="thead">涨跌幅</span>
               <i className={`iconimg icon-sort ${this.state.sortCol === 'inc_rate' ? (this.state.sortOrder === 'asc' ? 'icon-asc' : 'icon-desc') : 'icon-custom'}`}></i>
             </th>
+            <th onClick={() => this.sortBy('dividend')}>
+              <span className="thead">股息</span>
+              <i className={`iconimg icon-sort ${this.state.sortCol === 'dividend' ? (this.state.sortOrder === 'asc' ? 'icon-asc' : 'icon-desc') : 'icon-custom'}`}></i>
+            </th>
             <th onClick={() => this.sortBy('dividend_rate')}>
               <span className="thead">股息率</span>
               <i className={`iconimg icon-sort ${this.state.sortCol === 'dividend_rate' ? (this.state.sortOrder === 'asc' ? 'icon-asc' : 'icon-desc') : 'icon-custom'}`}></i>
@@ -204,10 +208,6 @@ class StockTable extends React.Component {
             <th onClick={() => this.sortBy('pe_ttm')}>
               <span className="thead">市盈率(TTM)</span>
               <i className={`iconimg icon-sort ${this.state.sortCol === 'pe_ttm' ? (this.state.sortOrder === 'asc' ? 'icon-asc' : 'icon-desc') : 'icon-custom'}`}></i>
-            </th>
-            <th onClick={() => this.sortBy('dividend')}>
-              <span className="thead">股息</span>
-              <i className={`iconimg icon-sort ${this.state.sortCol === 'dividend' ? (this.state.sortOrder === 'asc' ? 'icon-asc' : 'icon-desc') : 'icon-custom'}`}></i>
             </th>
             <th>
               <span class="thead">管理</span>

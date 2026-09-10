@@ -10,11 +10,11 @@ export default {
   mode: 'development',
   devtool: 'source-map',
   entry: {
-    content: './src/content/index.jsx'
+    content: './src/content/index.jsx',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'content.js'
+    filename: '[name].js'
   },
   module: {
     rules: [
@@ -26,6 +26,10 @@ export default {
       {
         test: /\.css$/,
         use: ['style-loader', 'css-loader']
+      },
+      {
+        test: /\.(png|jpg|jpeg|gif|svg)$/i,
+        type: 'asset/inline'
       }
     ]
   },
