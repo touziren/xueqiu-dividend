@@ -106,7 +106,7 @@ class StockTableV2 extends React.Component {
     const dt = record.quote.timestamp;
 
     return (
-      <tr>
+      <tr key={code}>
         <td>
           <a href={"/S/" + url_code} target="_blank" data-analytics="1024" data-analytics-page="1000" data-analytics-data="{symbol:'01658',tab: '自选股票'}" className="name">
             {name}</a>
@@ -270,7 +270,7 @@ class StockTableV2 extends React.Component {
               <i className={`iconimg icon-sort ${this.state.sortCol === 'pe_ttm' ? (this.state.sortOrder === 'asc' ? 'icon-asc' : 'icon-desc') : 'icon-custom'}`}></i>
             </th>
             <th>
-              <span class="thead">管理</span>
+              <span className="thead">管理</span>
             </th>
           </tr>
         </thead>
