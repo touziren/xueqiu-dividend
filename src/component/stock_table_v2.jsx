@@ -5,37 +5,76 @@ import * as local from '../utils/local_db.js';
 import './stock_table.css'
 import './stock_table_xueqiu.css'
 import { xueqiu_stock_codes_key } from '../utils/local_db_key.js'
-const stock_data_dt_key = '1';
+import {formatDateTime, formatPercent} from '../utils/formater.js';
+
+import question_mark from '../../assets/question_mark.svg'
 
 
-class StockTable extends React.Component {
+class StockTableV2 extends React.Component {
   constructor(props) {
     super(props)
+    const group = props.group ? props.group: '';
+    const codes = local.map_a_get(xueqiu_stock_codes_key, group, []);
+
     this.state = {
-      update: 0,
+      dt: Date.now(),
       // 排序
       sortCol: null,
-      sortOrder: 'asc'
+      sortOrder: 'asc',
+      
+      // 证券代码
+      codes: codes,
+      stocks: {}
     }
+    this.timer = null;
+
+    this.refreshData = this.refreshData.bind(this);
   }
 
   del_row(code) {
     const group = this.props.group;
-    var stocks = local.map_a_get(xueqiu_stock_codes_key, group, []);
     code = code.toUpperCase();
-    if (code in stocks) {
-      delete stocks[code];
-      local.map_a_set(xueqiu_stock_codes_key, group, stocks);
-      this.setState({
-        update: this.state.update + 1
-      })
+
+    // 1. 删除 stocks 中对应的数据
+    const stocks = { ...this.state.stocks };
+    delete stocks[code];
+
+    // 2. 删除 localStorage 中的 code
+    var stock_codes = local.map_a_get(xueqiu_stock_codes_key, group, []);
+    
+    var idx = stock_codes.indexOf(code);
+    if(idx>-1) {
+      stock_codes.splice(idx, 1);
+      local.map_a_set(xueqiu_stock_codes_key, group, stock_codes);
     }
+
+    this.setState({
+      dt: Date.now(),
+      codes: stock_codes,
+      stocks: stocks
+    })
   }
 
-  rerender() {
+  refreshData() {
+    const group = this.props.group;
+    const codes = local.map_a_get(
+      xueqiu_stock_codes_key,
+      group,
+      []
+    );
+
+    const stocks = this.get_stock_data(codes);
+
     this.setState({
-      update: this.state.update + 1
-    })
+      dt: Date.now(),
+      stocks: stocks,
+      codes: codes
+    });
+
+    this.timer = setTimeout(
+        this.refreshData,
+        6000
+    )
   }
 
   recordTd(record) {
@@ -58,10 +97,13 @@ class StockTable extends React.Component {
     // 市盈率（ttm）
     const pe_ttm = record.quote.pe_ttm? record.quote.pe_ttm: 0;
     // 股息率
-    const dividend_rate = ((dividend / current) * 100 * (currency == 'HKD'? 0.8: 1)).toFixed(2);
+    const dividend_rate = dividend / current;
+    const dividend_rate_fee_behind = dividend_rate * (currency == 'HKD'? 0.8: 1);
     // 当日涨跌幅
     const inc = (current - last_close).toFixed(3);
     const inc_rate = (((current - last_close) / last_close) * 100).toFixed(2);
+
+    const dt = record.quote.timestamp;
 
     return (
       <tr>
@@ -73,6 +115,7 @@ class StockTable extends React.Component {
             {currency == 'USD' && <i className="iconimg icon-us"></i>}
             <span>{url_code}</span>
           </a>
+          <div className="code">{formatDateTime(dt)}</div>
         </td>
         <td>{current}</td>
         <td className={inc > 0 ? "gain" : inc < 0 ? "slip" : ""}>
@@ -82,7 +125,8 @@ class StockTable extends React.Component {
           </span>
         </td>
         <td>{dividend}</td>
-        <td>{dividend_rate + '%'}</td>
+        <td>{formatPercent(dividend_rate)}</td>
+        <td>{formatPercent(dividend_rate_fee_behind)}</td>
         <td>{pb}</td>
         <td>{pe_lyr}</td>
         <td>{pe_forecast}</td>
@@ -107,35 +151,38 @@ class StockTable extends React.Component {
     });
   }
 
-  render() {
-    const group = this.props.group;
-    var stocks = local.map_a_get(xueqiu_stock_codes_key, group, []);
-    var dt = local.map_a_get(stock_data_dt_key, group, 0);
-
-    const current = Date.now();
-    // 是否超过max-live-seconds
-    if (current - dt > 60 * 1000) {
-      const codes = Object.keys(stocks);
-      if (codes.length > 0) {
+  get_stock_data = (codes) => {
+    var stocks = {};
+    if (codes.length > 0) {
         stocks = xueqiu.get_quote_data(codes);
         stocks = stocks.data.items;
         // 转map
         var stocks_map = {};
         for (var r of stocks) {
-          var c = r.quote.code;
-          stocks_map[c] = r;
+            var c = r.quote.code;
+            stocks_map[c] = r;
         }
         stocks = stocks_map;
-        local.map_a_set(xueqiu_stock_codes_key, 'test', stocks);
-        local.map_a_set(stock_data_dt_key, group, Date.now());
-        console.log('更新stock数据！')
-      }
     }
+    return stocks;
+  }
+
+  render() {
+    console.log(this.props.group)
+    const stocks = this.state.stocks;
 
     // 排序
     let stockArray = Object.entries(stocks); // [[code, record], ...]
     if (this.state.sortCol) {
-      if (this.state.sortCol == 'inc_rate') {
+      if (this.state.sortCol == 'name') {
+        stockArray.sort(([codeA, recA], [codeB, recB]) => {
+          let a = recA.quote.name;
+          let b = recB.quote.name;
+
+          const result = a.localeCompare(b, 'zh-CN');
+          return this.state.sortOrder === 'asc'? result: -result;
+        });
+      } else if (this.state.sortCol == 'inc_rate') {
         stockArray.sort(([codeA, recA], [codeB, recB]) => {
           let a = ((recA.quote.current - recA.quote.last_close) / recA.quote.last_close) * 100;
           let b = ((recB.quote.current - recB.quote.last_close) / recB.quote.last_close) * 100;
@@ -153,13 +200,20 @@ class StockTable extends React.Component {
 
           return this.state.sortOrder === 'asc' ? a - b : b - a;
         });
+      } else if (this.state.sortCol == 'dividend_rate_fee_behind' ) {
+        stockArray.sort(([codeA, recA], [codeB, recB]) => {
+          let a = (recA.quote.dividend / recA.quote.current) * 100 * (recA.quote.currency == 'HKD'? 0.8: 1);
+          let b = (recB.quote.dividend / recB.quote.current) * 100 * (recB.quote.currency == 'HKD'? 0.8: 1);
+
+          return this.state.sortOrder === 'asc' ? a - b : b - a;
+        });
       } else {
         stockArray.sort(([codeA, recA], [codeB, recB]) => {
           let a = recA.quote[this.state.sortCol];
           let b = recB.quote[this.state.sortCol];
           a = a? a: 0;
           b = b? b: 0;
-          console.log('xvzv', a,b, this.state.sortCol, this.state)
+          // console.log('xvzv', a,b, this.state.sortCol, this.state)
           if (typeof a === 'string') a = a.toUpperCase();
           if (typeof b === 'string') b = b.toUpperCase();
 
@@ -170,14 +224,14 @@ class StockTable extends React.Component {
       }
     }
 
-    console.log(stocks)
-
-
     return (
       <table className="stock-table optional__tb">
         <thead>
           <tr>
-            <th>股票</th>
+            <th onClick={() => this.sortBy('name')}>
+              <span className="thead">股票</span>
+              <i className={`iconimg icon-sort ${this.state.sortCol === 'name' ? (this.state.sortOrder === 'asc' ? 'icon-asc' : 'icon-desc') : 'icon-custom'}`}></i>
+            </th>
             <th onClick={() => this.sortBy('current')}>
               <span className="thead">当前价</span>
               <i className={`iconimg icon-sort ${this.state.sortCol === 'current' ? (this.state.sortOrder === 'asc' ? 'icon-asc' : 'icon-desc') : 'icon-custom'}`}></i>
@@ -193,6 +247,11 @@ class StockTable extends React.Component {
             <th onClick={() => this.sortBy('dividend_rate')}>
               <span className="thead">股息率</span>
               <i className={`iconimg icon-sort ${this.state.sortCol === 'dividend_rate' ? (this.state.sortOrder === 'asc' ? 'icon-asc' : 'icon-desc') : 'icon-custom'}`}></i>
+            </th>
+            <th onClick={() => this.sortBy('dividend_rate_fee_behind')} style={{display: 'flex', alignItems: 'center'}}>
+              <span className="thead">股息率(税后)</span>
+              <img src={question_mark} title="A股股息率未扣税（长期持有），港股股息率=实际股息率*0.8；即方便对比长期投资者实际获得差异。" style={{height: '1rem'}}/>
+              <i className={`iconimg icon-sort ${this.state.sortCol === 'dividend_rate_fee_behind' ? (this.state.sortOrder === 'asc' ? 'icon-asc' : 'icon-desc') : 'icon-custom'}`}></i>
             </th>
             <th onClick={() => this.sortBy('pb')}>
               <span className="thead">市净率</span>
@@ -217,10 +276,40 @@ class StockTable extends React.Component {
         </thead>
         <tbody>
           {stockArray.map(([code, record]) => this.recordTd(record))}
+          <tr className="table-note">
+            <td colSpan="10">
+                <div>刷新时间： {formatDateTime(this.state.dt)}</div>
+                <div>注：汇率数据、分红数据仅供参考，实际数据以市场行情和公告为准。</div>
+            </td>
+          </tr>
         </tbody>
+        
       </table>
     )
   }
+
+  componentDidMount() {
+    this.refreshData();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.group !== this.props.group || prevProps.update !== this.props.update) {
+
+      // 清除旧 timer
+      if (this.timer) {
+        clearTimeout(this.timer);
+      }
+
+      // 立即加载新 group
+      this.refreshData();
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+  }
 }
 
-export default StockTable
+export default StockTableV2

@@ -2,11 +2,12 @@ import React, { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import GroupButton from '../component/group_button'
-import StockTable from '../component/stock_table'
+import StockTable from '../component/stock_table';
+import StockTableV2 from '../component/stock_table_v2.jsx'
 import Currency from '../component/currency.jsx'
 import * as local from '../utils/local_db'
 import * as xueqiu from '../utils/xueqiu'
-import {group_key, stock_data_key} from '../utils/local_db_key.js'
+import { group_key, xueqiu_stock_codes_key } from '../utils/local_db_key.js'
 
 import './index.css'
 
@@ -18,7 +19,7 @@ class App extends React.Component {
     super(props)
     const groups = local.list_get(group_key);
     this.state = {
-      group: groups.length>0? groups[0]: null,
+      group: groups.length > 0 ? groups[0] : null,
       open: false,
       update: 0
     }
@@ -29,75 +30,94 @@ class App extends React.Component {
   }
 
   setOpen(v) {
-    this.setState({open: v});
+    this.setState({ open: v });
   }
 
   addGroup(group) {
     const flag = local.list_add(group_key, group);
-    if(flag) {
-      this.setState({group: group});
+    if (flag) {
+      this.setState({ group: group });
     }
   }
   removeGroup(group) {
     local.list_a_del(group_key, group);
     // map清理
-    local.map_a_del(stock_data_key, group);
+    local.map_a_del(xueqiu_stock_codes_key, group);
     // 刷新表
-    if(group == this.state.group) {
+    if (group == this.state.group) {
       const groups = local.list_get(group_key);
-      this.setState({group: groups.length>0? groups[0]: null})
+      this.setState({ group: groups.length > 0 ? groups[0] : null })
     }
   }
   changeGroup(group) {
-    this.setState({group: group});
+    this.setState({ group: group });
   }
 
   addStock() {
-      var code = prompt('请输入股票代码(如000001, 0688）')
-      if(code == null) {return}
-      
-      code = code.trim().toUpperCase();
+    if (!this.state.group) {
+      alert('请先添加分组！');
+      return;
+    }
 
-      if(code.length > 0){
-        const rep = xueqiu.get_quote_data(code);
-        const data= rep.data.items[0];
-        if(data.quote == null) {
-          alert(code+'标的不存在！');
-          return;
-        }
-        // 加入local
-        const group = this.state.group;
-        var stocks = local.map_a_get(stock_data_key, group, {});
-        stocks[code] = data;
-        local.map_a_set(stock_data_key, group, stocks);
-        // 更新表格
-        this.setState({update: this.state.update+1})
+    var code = prompt('请输入股票代码(如000001, 0688）')
+    if (code == null) { return }
+
+    code = code.trim().toUpperCase();
+
+    if (code.length > 0) {
+      const rep = xueqiu.get_quote_data(code);
+      const data = rep.data.items[0];
+      if (data.quote == null) {
+        alert(code + '标的不存在！');
+        return;
       }
+      // 加入local
+      const group = this.state.group;
+      var stocks = local.map_a_get(xueqiu_stock_codes_key, group, []);
+
+      // code不存在
+      if (stocks.indexOf(code) == -1) {
+        stocks.push(code);
+        local.map_a_set(xueqiu_stock_codes_key, group, stocks);
+      }
+
+      // 更新表格
+      this.setState({ update: this.state.update + 1 })
+    }
   }
 
   addDefault(k) {
+    if (!this.state.group) {
+      alert('请先添加分组！');
+      return;
+    }
+
     const data = {
-      'bank': ['601988','03988','601288','01288','601398','01398','00939','601939','601658','01658','600036','000001','601328','03328'],
-      'insurance':['601318', '02318', '601319', '01339', '02628', '601628', '00966', '601319', '01339'],
+      'bank': ['601988', '03988', '601288', '01288', '601398', '01398', '00939', '601939', '601658', '01658', '600036', '000001', '601328', '03328'],
+      'insurance': ['601318', '02318', '601319', '01339', '02628', '601628', '00966', '601319', '01339'],
       'oil': ['600028', '00386', '601857', '00857', '600938', '00883']
     }
     const codes = data[k];
-    if(codes.length > 0) {
+    if (codes.length > 0) {
       const rep = xueqiu.get_quote_data(codes);
-      const items= rep.data.items;
+      const items = rep.data.items;
       // 加入local
-        const group = this.state.group;
-        var stocks = local.map_a_get(stock_data_key, group, {});
-        for(var item of items) {
-          if(item.quote == null) {
-            continue;
-          }
-          const code = item.quote.code.toUpperCase();
-          stocks[code] = item;
+      const group = this.state.group;
+      var stocks = local.map_a_get(xueqiu_stock_codes_key, group, {});
+      for (var item of items) {
+        if (item.quote == null) {
+          continue;
         }
-        local.map_a_set(stock_data_key, group, stocks);
-        // 更新表格
-        this.setState({update: this.state.update+1})
+        const code = item.quote.code.toUpperCase();
+        stocks[code] = item;
+      }
+
+      var stocks = local.map_a_get(xueqiu_stock_codes_key, group, []);
+      stocks = stocks.concat(codes);
+      stocks = [...new Set(stocks)]
+      local.map_a_set(xueqiu_stock_codes_key, group, stocks);
+      // 更新表格
+      this.setState({ update: this.state.update + 1 })
     }
   }
 
@@ -120,12 +140,12 @@ class App extends React.Component {
             <div className="divider"></div>
             <div className="ctl">
               <button onClick={this.addStock}>新增股票</button>
-              <button onClick={()=>this.addDefault('bank')}>导入大行</button>
-              <button onClick={()=>this.addDefault('insurance')}>导入保险</button>
-              <button onClick={()=>this.addDefault('oil')}>导入石油</button>
+              <button onClick={() => this.addDefault('bank')}>导入大行</button>
+              <button onClick={() => this.addDefault('insurance')}>导入保险</button>
+              <button onClick={() => this.addDefault('oil')}>导入石油</button>
             </div>
             <div className="view">
-              <StockTable group={this.state.group} update={this.state.update}/>
+              <StockTableV2 group={this.state.group} updaet={this.state.update}/>
             </div>
           </div>
         )}
@@ -145,12 +165,3 @@ root.id = 'xueqiu-panel'
 document.body.appendChild(root)
 
 createRoot(root).render(<App />)
-// console.log('雪球网页加载完成')
-// chrome.runtime.sendMessage(
-//   {
-//     type: 'hello'
-//   },
-//   (response) => {
-//     console.log('Background 返回：', response)
-//   }
-// )

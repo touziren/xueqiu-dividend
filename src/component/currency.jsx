@@ -51,7 +51,7 @@ function Currency(props) {
                 {formatDateTime(value?.dt)}
             </span>
             <span className="update-btn" onClick={updateCurrency}>
-                <img src={update_logo} alt="更新" />
+                <img src={update_logo} alt="更新" title="更新" />
             </span>
         </div>
     )
