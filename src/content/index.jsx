@@ -59,30 +59,43 @@ class App extends React.Component {
       return;
     }
 
-    var code = prompt('请输入股票代码(如000001, 0688）')
-    if (code == null) { return }
+    var val = prompt('请输入股票代码(如000001, 0688）')
+    if (val == null || val.trim().length == 0) { return }
 
-    code = code.trim().toUpperCase();
+    val = val.trim().toUpperCase();
+    var codes = val.split(',').map(r=>r.trim());
 
-    if (code.length > 0) {
-      const rep = xueqiu.get_quote_data(code);
-      const data = rep.data.items[0];
-      if (data.quote == null) {
-        alert(code + '标的不存在！');
-        return;
+    var success_codes  = [], error_codes = [];
+    codes.forEach((code, index) => {
+      // console.log(index, item);
+      if (code.length > 0) {
+        const rep = xueqiu.get_quote_data(code);
+        const data = rep.data.items[0];
+        if (data.quote == null) {
+          error_codes.push(code);
+          return;
+        }
+        // 加入local
+        const group = this.state.group;
+        var stocks = local.map_a_get(xueqiu_stock_codes_key, group, []);
+  
+        // code不存在
+        if (stocks.indexOf(code) == -1) {
+          stocks.push(code);
+          local.map_a_set(xueqiu_stock_codes_key, group, stocks);
+        }
+        success_codes.push(code);
       }
-      // 加入local
-      const group = this.state.group;
-      var stocks = local.map_a_get(xueqiu_stock_codes_key, group, []);
-
-      // code不存在
-      if (stocks.indexOf(code) == -1) {
-        stocks.push(code);
-        local.map_a_set(xueqiu_stock_codes_key, group, stocks);
-      }
-
-      // 更新表格
-      this.setState({ update: this.state.update + 1 })
+    });
+    // 更新表格
+    if(success_codes.length > 0) {
+      this.setState({ update: this.state.update + 1 });
+    }
+    
+    // 错误提示
+    if(error_codes.length > 0) {
+      const err = error_codes.join(',') + '代码无法添加，请检测代码或联系管理员！'
+      alert(err);
     }
   }
 
